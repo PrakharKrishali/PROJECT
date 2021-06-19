@@ -1,0 +1,99 @@
+# Description : This is a sentiment analysis program 
+
+
+# import the libraries
+import tweepy
+from textblob import TextBlob
+import pandas as pd
+import numpy as np
+import re
+
+
+
+# Twitter API credentials
+consumerKey = "I6JV64tnXF04utLo73D8uzpc7"
+consumerSecret = "lP4uVWUGXEUZX3M9VAP9wbyjsrIbt5UshKeJGIbMqblwohqsJr"
+accessToken = "1272794785690947584-ebJdyesr11s75hESVvs5kbbbfDiVsy"
+accessTokenSecret = "L9nBWeqgfFFmdPW45ATvDZ7W3tfEpblodfH0ISLMqnv20"
+
+
+# Create the authentication object
+authenticate=tweepy.OAuthHandler(consumerKey, consumerSecret)
+
+# Set the access token and access token secret
+authenticate.set_access_token(accessToken, accessTokenSecret)
+
+# Create the API object while passing in the auth information
+api = tweepy.API(authenticate, wait_on_rate_limit = True)
+
+
+# Extract 100 tweets from the twitter user
+post = api.user_timeline(screen_name = "realDonaldTrump", count = 100, lang = "en", tweet_mode = "extended")
+
+# Print the last 5 tweets from the account
+print("Show the 5 recent tweets: \n")
+i = 1
+for tweet in post[0:5]:
+  print(str(i) + ') ' + tweet.full_text + '\n')
+  i = i + 1
+
+
+# Create a data frame with a column called Tweets
+df = pd.DataFrame( [tweet.full_text for tweet in post] , columns = ['Tweets'])
+
+# Show the first 5 rows of data
+df.head()
+
+
+# Clean the text 
+
+# Create a function to clean the tweets
+def cleanTxt(text):
+  text = re.sub(r'@[A-Za-z0-9]+', '', text) # Removing @mentions
+  text = re.sub(r'#', '', text) # Removing the '#' symbol
+  text = re.sub(r'https?:\/\/\S+', '', text) # Removing the hyperlink
+
+  return text
+
+df['Tweets'] = df['Tweets'].apply(cleanTxt)
+
+# Show the cleaned text
+df
+
+
+# Create a function to get the polarity
+def getPolarity(text):
+  return TextBlob(text).sentiment.polarity
+
+# Create a new column
+df['Polarity'] = df['Tweets'].apply(getPolarity)
+
+# Show the new dataframe with the new columns
+df
+
+
+# Create a function to compute the negative,neutral and positive analysis
+def getAnalysis(pol):
+  if pol < 0:
+    return 'Negative'
+  elif pol == 0:
+    return 'Neutral'
+  else:
+    return 'Positive'
+
+df['Analysis'] = df['Polarity'].apply(getAnalysis)
+
+# Show the dataframe
+df
+
+
+
+
+
+
+
+
+
+
+
+
